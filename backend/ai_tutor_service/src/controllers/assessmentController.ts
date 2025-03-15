@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { getAssessmentQuesService } from "../services/assessmentQuesService";
+import { evaluateAssessmentService, getAssessmentQuesService } from "../services/assessmentQuesService";
 
 interface AuthRequest extends Request {
     user?: { _id: string };
@@ -13,7 +13,15 @@ export const getAssessmentQuestions = async (req: AuthRequest, res: Response ): 
     userId,
     age,
     level,
-    questions,
-  });
+    questions
+  }); 
 };
 
+export const evaluateAssessment = async( req: Request, res: Response) => {
+  const { assessmentResult, aiFeedback } = await evaluateAssessmentService(req.body);
+  res.status(200).json({
+    message: "Assessment evaluated successfully",
+    assessmentResult,
+    aiFeedback
+  })
+};

@@ -1,5 +1,5 @@
 import mongoose, { Schema, Document } from "mongoose";
-// submitAssessment conroller
+
 interface IAssessment extends Document {
   userId: string;
   responses: { questionId: number; answer: string }[];

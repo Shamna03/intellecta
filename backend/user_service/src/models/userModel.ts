@@ -8,6 +8,7 @@ export interface IUser extends Document {
   phone: string,
   role: "student" | "parent" | "teacher" | "admin";
   profilePic?: string;
+  // refreshToken: string;
 }
 
 const UserSchema: Schema = new Schema(
@@ -46,6 +47,9 @@ const UserSchema: Schema = new Schema(
         type: String,
         default: null
     },
+    // refreshToken:{
+    //   type:String
+    // },
   },
   { timestamps: true }
 );
