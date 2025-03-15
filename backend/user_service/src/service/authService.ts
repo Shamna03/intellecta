@@ -1,7 +1,7 @@
 import { Response } from "express";
 import User from "../models/userModel";
 import CustomError from "../utils/customErrorHandler";
-import { generateToken } from "../utils/jwt";
+import { generateRefreshToken, generateToken } from "../utils/jwt";
 import { comparePassword, hashPassword } from "../utils/passwordHash";
 import { JwtPayload } from "jsonwebtoken";
 
@@ -87,8 +87,13 @@ export const loginUserService = async (data: LoginData , res:Response): Promise<
   }
 
   const token = generateToken(userExist._id.toString()); // Convert ObjectId to string
+  const refreshToken = generateRefreshToken(userExist._id.toString())
 
   res.cookie("token",token,{
+    httpOnly: true,
+    secure: false,
+  })
+  res.cookie("refreshToken",refreshToken,{
     httpOnly: true,
     secure: false,
   })

@@ -12,6 +12,7 @@ import nodemailer from "nodemailer";
 
 import dotenv from "dotenv";
 import { hashPassword } from "../utils/passwordHash";
+import { generateToken, verifyToken } from "../utils/jwt";
 
 dotenv.config();
 
@@ -123,4 +124,31 @@ export const resetPassword = async (
   await user.save();
 
   res.status(200).json({ message: "Password has been reset" });
+};
+
+// ===============================================================
+//refresh token to access token
+
+export const refreshTokeToAccessToken = async (req: Request, res: Response) => {
+  const refreshToken = req.cookies.refreshToken;
+  if (!refreshToken) {
+    throw new CustomError("refresh token is required", 404);
+  }
+
+  if(!process.env.REFRESH_TOKEN_SECRET){
+    throw new CustomError("token credentials not found", 404)
+  }
+
+  const data = verifyToken(refreshToken, process.env.REFRESH_TOKEN_SECRET)
+  if(!data){
+    throw new CustomError("token verification failed",404)
+  }
+
+  const accessToken = generateToken(data)
+  if(!accessToken){
+    throw new CustomError("access token generation failed", 404)
+  }
+
+
+  return res.status(200).json({ message: "Access token generated", accessToken })
 };
