@@ -45,8 +45,6 @@ const NotificationSchema = new mongoose_1.Schema({
     },
     type: {
         type: String,
-        enum: ['info', 'warning', 'announcement'],
-        default: 'info',
     },
     status: {
         type: String,

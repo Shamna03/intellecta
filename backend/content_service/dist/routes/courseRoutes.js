@@ -1,0 +1,24 @@
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = __importDefault(require("express"));
+const asyncErrorHandler_1 = require("../middlewares/asyncErrorHandler");
+const auth_1 = require("../middlewares/auth");
+const courseController_1 = require("../controller/courseController");
+const upload_1 = require("../middlewares/upload");
+const courseRouter = express_1.default.Router();
+courseRouter.get("/search", (0, asyncErrorHandler_1.asyncErrorHandler)(courseController_1.searchCourses));
+courseRouter.get("/", (0, asyncErrorHandler_1.asyncErrorHandler)(courseController_1.getAllCourses));
+courseRouter.post("/", upload_1.upload.single('image'), (0, asyncErrorHandler_1.asyncErrorHandler)(courseController_1.addCourse));
+courseRouter.put("/editCourse/:courseId", upload_1.upload.single('image'), (0, asyncErrorHandler_1.asyncErrorHandler)(courseController_1.editCourse));
+courseRouter.patch("/deleteCourse/:courseId", (0, asyncErrorHandler_1.asyncErrorHandler)(courseController_1.deleteCourse));
+courseRouter.get("/:subject/filter", (0, asyncErrorHandler_1.asyncErrorHandler)(courseController_1.getFilteredCourses));
+courseRouter.get("/:courseId", (0, asyncErrorHandler_1.asyncErrorHandler)(courseController_1.getCourseWithLessons));
+courseRouter.get("/lessons/:lessonId", (0, asyncErrorHandler_1.asyncErrorHandler)(courseController_1.getLessonById));
+// courseRouter.post("/lessons/:lessonId/complete", authMiddleware, asyncErrorHandler(markLessonAsComplete));
+courseRouter.get("/subject/:subject", auth_1.authMiddleware, (0, asyncErrorHandler_1.asyncErrorHandler)(courseController_1.getAllCoursesBySubject));
+courseRouter.post("/generate-quiz", (0, asyncErrorHandler_1.asyncErrorHandler)(courseController_1.generateCourseQuizzesService));
+courseRouter.get("/fetch-quiz/:courseId", (0, asyncErrorHandler_1.asyncErrorHandler)(courseController_1.fetchLessonQuiz));
+exports.default = courseRouter;

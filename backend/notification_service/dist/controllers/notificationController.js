@@ -18,6 +18,7 @@ const rabbitmqPublish_1 = require("../utils/rabbitmq/rabbitmqPublish");
 const userConsumer_1 = require("../consumers/userConsumer");
 const notificationModel_1 = __importDefault(require("../models/notificationModel"));
 const mongoose_1 = __importDefault(require("mongoose"));
+const fetchSpecificUser_1 = require("../consumers/fetchSpecificUser");
 const isValidObjectId = (id) => mongoose_1.default.Types.ObjectId.isValid(id);
 const sendNotification = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     var _a;
@@ -26,26 +27,24 @@ const sendNotification = (req, res) => __awaiter(void 0, void 0, void 0, functio
         throw new CustomError_1.default("User ID is required", 400);
     }
     const { title, message, type, status, targetType, targetAgeGroup, recipientId, } = req.body;
-    console.log("userId", userId);
-    yield (0, rabbitmqPublish_1.publishToQueue)("allUserDetailsNotification", userId);
+    if (message) {
+        yield (0, rabbitmqPublish_1.publishToQueue)("allUserDetailsNotification", userId);
+    }
     yield new Promise((resolve) => setTimeout(resolve, 1500));
     const allUsers = Array.from(userConsumer_1.users.values());
-    console.log("allUsers:", allUsers);
+    // console.log("allUsers:",allUsers)
     if (!title || !message || !type || !targetType) {
         throw new CustomError_1.default("Missing required fields.", 400);
     }
     //to all users 
     if (targetType === 'all') {
-        const notifications = allUsers.map((user) => ({
+        const notification = yield notificationModel_1.default.create({
             title,
             message,
             type,
-            targetType,
-            recipient: user._id,
-        }));
-        yield notificationModel_1.default.insertMany(notifications);
-        // console.log(object)
-        return res.status(200).json({ message: 'Notification sent to all users.', notifications });
+            targetType
+        });
+        return res.status(200).json({ message: 'Notification sent to all users.', notification });
     }
     //To all users bby catagory
     if (targetType === 'age-group') {
@@ -70,18 +69,24 @@ const sendNotification = (req, res) => __awaiter(void 0, void 0, void 0, functio
             const userAge = user.age;
             return userAge >= ageRange[0] && userAge <= ageRange[1];
         });
-        const notifications = filteredUsers.map((user) => ({
-            title,
-            message,
-            type,
-            targetType,
-            targetAgeGroup,
-            recipient: user._id,
-        }));
-        yield notificationModel_1.default.insertMany(notifications);
-        return res
-            .status(200)
-            .json({ message: `Notification sent to age group ${targetAgeGroup}.` });
+        console.log("Filtered users for age group", targetAgeGroup, ":", filteredUsers);
+        try {
+            // Create only one notification for the age group
+            const notification = yield notificationModel_1.default.create({
+                title,
+                message,
+                type,
+                targetType,
+            });
+            return res.status(200).json({
+                message: `Notification sent to age group ${targetAgeGroup}.`,
+                notification,
+            });
+        }
+        catch (error) {
+            console.error("Error inserting notification:", error);
+            throw new CustomError_1.default("Failed to save notification", 500);
+        }
     }
     //TO send individually
     if (targetType === 'individual') {
@@ -107,20 +112,44 @@ const sendNotification = (req, res) => __awaiter(void 0, void 0, void 0, functio
 exports.sendNotification = sendNotification;
 const getAllNotifications = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     var _a;
-    try {
-        const userId = (_a = req.user) === null || _a === void 0 ? void 0 : _a.userId;
-        // If you want to fetch only notifications for the logged-in user:
-        const filter = userId ? { recipient: userId } : {};
-        const notifications = yield notificationModel_1.default.find();
-        return res.status(200).json({
-            success: true,
-            count: notifications.length,
-            notifications,
-        });
+    const userId = (_a = req.user) === null || _a === void 0 ? void 0 : _a.userId;
+    if (!userId) {
+        throw new CustomError_1.default("userId is not found", 400);
     }
-    catch (error) {
-        console.error("Error fetching notifications:", error);
-        throw new CustomError_1.default("Failed to fetch notifications", 500);
+    yield (0, rabbitmqPublish_1.publishToQueue)("GetSpecificUser_Notification_service", userId);
+    yield new Promise((resolve) => setTimeout(resolve, 1500));
+    const userData = yield (0, fetchSpecificUser_1.getUserData)(userId);
+    console.log("userData", userData);
+    if (!userData) {
+        throw new CustomError_1.default("userData is not found", 400);
     }
+    const age = userData === null || userData === void 0 ? void 0 : userData.age;
+    const ageFitsGroup = (age, group) => {
+        const [min, max] = group.split("-").map(Number);
+        return age >= min && age <= max;
+    };
+    const allNotifications = yield notificationModel_1.default.find({
+        $or: [
+            { targetType: "all" },
+            { targetType: "age-group" },
+            { targetType: "individual", recipient: userId }
+        ]
+    });
+    const filteredNotifications = allNotifications.filter((notification) => {
+        var _a;
+        if (notification.targetType === "all")
+            return true;
+        if (notification.targetType === "age-group" && notification.targetAgeGroup) {
+            return ageFitsGroup(age, notification.targetAgeGroup);
+        }
+        if (notification.targetType === "individual") {
+            return ((_a = notification.recipient) === null || _a === void 0 ? void 0 : _a.toString()) === userId;
+        }
+        return false;
+    });
+    return res.status(200).json({
+        message: "Notifications fetched successfully",
+        data: filteredNotifications,
+    });
 });
 exports.getAllNotifications = getAllNotifications;

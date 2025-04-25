@@ -16,8 +16,8 @@ exports.users = users;
 function startConsumer() {
     return __awaiter(this, void 0, void 0, function* () {
         console.log("Initializing RabbitMQ consumer...");
-        yield (0, rabbitmqConsumer_1.consumeFromQueue)("userData", (data) => __awaiter(this, void 0, void 0, function* () {
-            // console.log("Admin Service received 'userData' event:", data);
+        yield (0, rabbitmqConsumer_1.consumeFromQueue)("allUserDetailsToNotification", (data) => __awaiter(this, void 0, void 0, function* () {
+            console.log("notification Service received event:", data);
             if (Array.isArray(data)) {
                 // If it's a list of users
                 data.forEach((user) => {

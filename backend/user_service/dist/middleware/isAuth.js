@@ -18,11 +18,17 @@ const customErrorHandler_1 = __importDefault(require("../utils/customErrorHandle
 const isAuthenticate = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     const token = req.cookies.token;
     if (!token) {
-        throw new customErrorHandler_1.default("token is not exist in the cookie", token);
+        return next(new customErrorHandler_1.default("Token does not exist in the cookie", 401));
     }
     try {
         const decoded = jsonwebtoken_1.default.verify(token, process.env.TOKEN_SECRET);
-        req.user = decoded;
+        console.log("hy1");
+        if (typeof decoded === "string" || !decoded._id) {
+            return next(new customErrorHandler_1.default("Invalid token payload", 401));
+        }
+        // console.log("hy2",)
+        req.user = { userId: decoded._id, age: decoded.age };
+        console.log("hy2", req.user);
         next();
     }
     catch (err) {
@@ -30,3 +36,14 @@ const isAuthenticate = (req, res, next) => __awaiter(void 0, void 0, void 0, fun
     }
 });
 exports.isAuthenticate = isAuthenticate;
+// export const isAdmin = (
+//   req: CustomRequestOne,
+//   res: Response,
+//   next: NextFunction
+// ) => {
+//   if (!req.user || req.user.role !== "admin") {
+//     console.log("hy2")
+//     return next(new CustomError("Access denied. Admins only.", 403));
+//   }
+//   next();
+// };
