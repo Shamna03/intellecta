@@ -6,6 +6,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const app_1 = __importDefault(require("./app"));
 const dotenv_1 = __importDefault(require("dotenv"));
 const db_1 = __importDefault(require("./config/db"));
+require("./consumers/fetchSpecificUser");
+require("./consumers/userConsumer");
 dotenv_1.default.config();
 const PORT = process.env.PORT;
 (0, db_1.default)();

@@ -75,7 +75,7 @@ function consumeFromQueue(queue, callback) {
                 if (msg) {
                     // console.log("🟢 Raw message received:", msg.content.toString("utf-8"));
                     const data = JSON.parse(msg.content.toString("utf-8"));
-                    console.log(`Received message in ai service`, data);
+                    console.log(`Received message in notification_service`, data);
                     callback(data);
                     channel === null || channel === void 0 ? void 0 : channel.ack(msg);
                 }

@@ -71,7 +71,7 @@ function publishToQueue(queue, message) {
                 throw new Error("Channel is not initialized");
             yield channel.assertQueue(queue);
             channel.sendToQueue(queue, Buffer.from(JSON.stringify(message)));
-            console.log(` adminService need some details ${queue}`);
+            console.log(` notification service need some details ${queue}`);
             // setTimeout(() => connection.close(), 500);
         }
         catch (error) {

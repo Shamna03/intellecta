@@ -48,12 +48,10 @@ const UserSchema = new mongoose_1.Schema({
     },
     password: {
         type: String,
-        required: true,
         select: false
     },
     age: {
         type: Number,
-        required: true,
         min: 5,
         max: 18
     },
@@ -65,10 +63,21 @@ const UserSchema = new mongoose_1.Schema({
         enum: ["student", "parent", "teacher", "admin"],
         default: "student",
     },
+    isDeleted: {
+        type: Boolean,
+        default: false
+    },
+    isActive: {
+        type: Boolean,
+        default: false
+    },
     profilePic: {
         type: String,
         default: null
-    },
+    }
+    // refreshToken:{
+    //   type:String
+    // },
 }, { timestamps: true });
 const User = mongoose_1.default.model("User", UserSchema);
 exports.default = User;
